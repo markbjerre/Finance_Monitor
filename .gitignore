@@ -26,6 +26,9 @@ wheels/
 # Environment variables
 .env
 
+# Deployment config (contains server-specific info)
+child_repo_config.md
+
 # Flask
 instance/
 .webassets-cache

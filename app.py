@@ -32,5 +32,11 @@ def dashboard():
     return render_template('dashboard.html', **context)
 
 
+@app.route('/health')
+def health():
+    """Health check endpoint for monitoring."""
+    return jsonify({"status": "ok"})
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='127.0.0.1', port=5002)
