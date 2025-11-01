@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-graph-up-arrow"></i> Finance Dashboard
+            </span>
+            <span class="text-light">
+                <i class="bi bi-clock"></i> {{ current_time }}
+            </span>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Left Column - Stock Chart -->
+            <div class="col-lg-8 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Stock Price Chart</h5>
+                    </div>
+                    <div class="card-body" style="min-height: 400px;">
+                        <div class="placeholder-content text-center py-5">
+                            <i class="bi bi-bar-chart-line display-1 text-muted"></i>
+                            <p class="text-muted mt-3">Stock price chart will appear here</p>
+                            <p class="text-muted small">Real-time stock data integration pending</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - AI Commentary -->
+            <div class="col-lg-4 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-robot"></i> AI Market Insights</h5>
+                    </div>
+                    <div class="card-body" style="min-height: 400px;">
+                        <div class="placeholder-content">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> AI Commentary Placeholder
+                            </div>
+                            <p class="text-muted">
+                                <strong>AI-generated market insights will appear here.</strong>
+                            </p>
+                            <p class="text-muted small">
+                                This section will provide:
+                            </p>
+                            <ul class="text-muted small">
+                                <li>Buy/sell recommendations</li>
+                                <li>Market trend analysis</li>
+                                <li>Macro economic insights</li>
+                                <li>Risk assessments</li>
+                            </ul>
+                            <p class="text-muted small mt-3">
+                                <em>Last updated: Pending integration</em>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Row - News Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="bi bi-newspaper"></i> Top Financial News</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="placeholder-content">
+                            <!-- Placeholder News Items -->
+                            <div class="news-item mb-3 pb-3 border-bottom">
+                                <h6 class="text-primary">
+                                    <i class="bi bi-dot"></i> Market News Headline #1
+                                </h6>
+                                <p class="text-muted small mb-1">
+                                    News article summary will appear here. This will be pulled from financial news APIs...
+                                </p>
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i> 2 hours ago | 
+                                    <i class="bi bi-link-45deg"></i> Source: News API
+                                </small>
+                            </div>
+
+                            <div class="news-item mb-3 pb-3 border-bottom">
+                                <h6 class="text-primary">
+                                    <i class="bi bi-dot"></i> Market News Headline #2
+                                </h6>
+                                <p class="text-muted small mb-1">
+                                    Another news article summary placeholder. Real news data will be integrated soon...
+                                </p>
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i> 4 hours ago | 
+                                    <i class="bi bi-link-45deg"></i> Source: News API
+                                </small>
+                            </div>
+
+                            <div class="news-item mb-3 pb-3 border-bottom">
+                                <h6 class="text-primary">
+                                    <i class="bi bi-dot"></i> Market News Headline #3
+                                </h6>
+                                <p class="text-muted small mb-1">
+                                    Third placeholder news article. These will be dynamically loaded from API...
+                                </p>
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i> 6 hours ago | 
+                                    <i class="bi bi-link-45deg"></i> Source: News API
+                                </small>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button class="btn btn-outline-primary" disabled>
+                                    <i class="bi bi-arrow-clockwise"></i> Load More News
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light text-center py-3 mt-5">
+        <p class="mb-0">Finance Dashboard &copy; 2025 | Status: <span class="badge bg-warning text-dark">Development Mode</span></p>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

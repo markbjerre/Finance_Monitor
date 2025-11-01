@@ -1,0 +1,93 @@
+/* Custom styles for Finance Dashboard */
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Card styling */
+.card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: 600;
+}
+
+/* Placeholder content styling */
+.placeholder-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+
+.placeholder-content.text-center {
+    text-align: center;
+}
+
+/* News item styling */
+.news-item {
+    transition: background-color 0.2s ease;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.news-item:hover {
+    background-color: #f8f9fa;
+}
+
+.news-item h6 {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+/* Navigation styling */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* Footer styling */
+footer {
+    margin-top: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .placeholder-content {
+        min-height: 200px;
+    }
+    
+    .card-body {
+        min-height: 300px !important;
+    }
+}
+
+/* Custom badge colors */
+.badge {
+    padding: 6px 12px;
+    font-weight: 500;
+}
+
+/* Icon sizing */
+.bi {
+    vertical-align: middle;
+}
+
+/* Shadow effects */
+.shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
