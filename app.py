@@ -65,8 +65,19 @@ def get_analysis_data():
     stock_info = get_stock_info(ticker)
     stock_price = get_current_price(ticker)
     
-    # Fetch recent news
-    news_articles = get_news_with_cache(category='business', limit=news_limit, max_age_minutes=60)
+    # Fetch recent news - use lower max_age to force refresh if stale
+    # max_age_minutes=0 means always fetch fresh, max_age_minutes=1440 means use cache if exists
+    news_articles = get_news_with_cache(category='business', limit=news_limit, max_age_minutes=1440)
+    
+    # Build news context - handle empty news gracefully
+    news_context = ""
+    if news_articles and len(news_articles) > 0:
+        news_context = "\n\n".join([
+            f"{i+1}. {article.get('ai_context', article.get('title', 'No title'))}"
+            for i, article in enumerate(news_articles)
+        ])
+    else:
+        news_context = "No recent news available. Analyzing based on company fundamentals and market trends."
     
     # Combine into AI-ready format
     response = {
@@ -83,24 +94,23 @@ def get_analysis_data():
             'description': stock_info.get('description', '')
         },
         'news': news_articles,
-        'prompt_template': f"""Analyze the following financial news in context of {ticker} stock:
+        'prompt_template': f"""Analyze {ticker} stock with following context:
 
 Company: {stock_info.get('company_name', ticker)}
 Sector: {stock_info.get('sector', 'N/A')}
 Current Price: ${stock_price.get('price', 0)}
 Change: {stock_price.get('change_percent', 0)}%
 Market Cap: ${stock_info.get('market_cap', 0):,}
+P/E Ratio: {stock_info.get('pe_ratio', 'N/A')}
 
-Recent News:
-{{news_context}}
+Recent News & Market Context:
+{news_context}
 
-Provide:
-1. Overall Sentiment (bullish/bearish/neutral)
-2. Key Factors affecting the stock
-3. Short-term outlook (1-7 days)
-4. Risk Assessment (low/medium/high)
-
-Format as JSON with keys: sentiment, key_factors, outlook, risk_level"""
+Provide analysis as JSON with keys:
+1. sentiment (bullish/bearish/neutral)
+2. key_factors (list of factors)
+3. outlook (1-7 day prediction)
+4. risk_level (low/medium/high)"""
     }
     
     return jsonify(response)
