@@ -65,9 +65,9 @@ def get_analysis_data():
     stock_info = get_stock_info(ticker)
     stock_price = get_current_price(ticker)
     
-    # Fetch recent news - use lower max_age to force refresh if stale
-    # max_age_minutes=0 means always fetch fresh, max_age_minutes=1440 means use cache if exists
-    news_articles = get_news_with_cache(category='business', limit=news_limit, max_age_minutes=1440)
+    # Fetch recent news - ALWAYS force fresh for API analysis
+    # max_age_minutes=0 forces API fetch regardless of cache
+    news_articles = get_news_with_cache(category='business', limit=news_limit, max_age_minutes=0)
     
     # Build news context - handle empty news gracefully
     news_context = ""

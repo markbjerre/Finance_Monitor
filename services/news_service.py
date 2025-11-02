@@ -187,16 +187,21 @@ def get_news_with_cache(category: str = 'business', limit: int = 10,
     Args:
         category: News category
         limit: Number of articles to return
-        max_age_minutes: Maximum age of cached news in minutes (default 60)
+        max_age_minutes: Maximum age of cached news in minutes. 
+                        Use 0 to always fetch fresh, -1 to use cache regardless of age
         
     Returns:
         List of AI-ready news articles (from cache or fresh from API)
     """
     try:
+        # If max_age_minutes is -1, use any cached news regardless of age
+        use_any_cache = max_age_minutes == -1
+        force_fresh = max_age_minutes == 0
+        
         # Step 1: Try to get cached news from database
         cached_news = db.get_recent_news(limit)
         
-        if cached_news and len(cached_news) > 0:
+        if cached_news and len(cached_news) > 0 and not force_fresh:
             # Step 2: Check if cache is fresh
             most_recent = cached_news[0]
             fetched_at_str = most_recent.get('fetched_at', '')
@@ -206,17 +211,20 @@ def get_news_with_cache(category: str = 'business', limit: int = 10,
             now = datetime.now(fetched_at.tzinfo)
             age_minutes = (now - fetched_at).total_seconds() / 60
             
-            if age_minutes < max_age_minutes:
+            if use_any_cache or age_minutes < max_age_minutes:
                 logger.info(f"Using cached news ({len(cached_news)} articles, age: {age_minutes:.1f} min)")
                 return cached_news
         
         # Step 3: Cache is stale or empty, fetch fresh news from API
-        logger.info(f"Fetching fresh news from API (cache stale or empty)")
+        logger.info(f"Fetching fresh news from API (force_fresh={force_fresh}, cached_available={bool(cached_news)})")
         fresh_news = fetch_financial_news(category, limit)
         
         if not fresh_news:
-            logger.warning("No fresh news fetched, returning cached news if available")
-            return cached_news if cached_news else []
+            logger.warning(f"No fresh news fetched from API")
+            if cached_news:
+                logger.warning(f"Returning {len(cached_news)} cached articles as fallback")
+                return cached_news
+            return []
         
         # Step 4: Save fresh news to database for future use
         for article in fresh_news:
@@ -232,7 +240,7 @@ def get_news_with_cache(category: str = 'business', limit: int = 10,
                 logger.error(f"Error caching news article: {e}")
                 continue
         
-        logger.info(f"Cached {len(fresh_news)} fresh news articles")
+        logger.info(f"Fetched and cached {len(fresh_news)} fresh news articles")
         return fresh_news
         
     except Exception as e:
