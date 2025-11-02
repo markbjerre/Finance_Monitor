@@ -129,7 +129,44 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- ============= COMPANY INFO TABLE =============
+-- Stores cached company information to reduce API calls
+CREATE TABLE IF NOT EXISTS company_info (
+    ticker VARCHAR(10) PRIMARY KEY,
+    company_name VARCHAR(255),
+    sector VARCHAR(100),
+    industry VARCHAR(100),
+    market_cap BIGINT,
+    pe_ratio DECIMAL(10, 2),
+    description TEXT,
+    website VARCHAR(255),
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for efficient lookup by last_updated
+CREATE INDEX IF NOT EXISTS idx_company_info_last_updated ON company_info(last_updated);
+
+-- Helper function to check if company info is stale (older than 24 hours)
+CREATE OR REPLACE FUNCTION is_company_info_stale(ticker_symbol VARCHAR)
+RETURNS BOOLEAN AS $$
+DECLARE
+    last_update TIMESTAMP WITH TIME ZONE;
+BEGIN
+    SELECT last_updated INTO last_update
+    FROM company_info
+    WHERE ticker = ticker_symbol;
+    
+    IF last_update IS NULL THEN
+        RETURN TRUE;  -- No data exists, considered stale
+    END IF;
+    
+    RETURN (CURRENT_TIMESTAMP - last_update) > INTERVAL '24 hours';
+END;
+$$ LANGUAGE plpgsql;
+
 -- Comments for documentation
 COMMENT ON TABLE stocks IS 'Stores historical stock price data';
 COMMENT ON TABLE news IS 'Stores financial news articles';
 COMMENT ON TABLE ai_insights IS 'Stores AI-generated market insights and commentary';
+COMMENT ON TABLE company_info IS 'Stores cached company information with 24hr TTL to reduce API calls';

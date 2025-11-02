@@ -301,6 +301,124 @@ class SupabaseService:
                 'error': str(e),
                 'timestamp': datetime.utcnow().isoformat()
             }
+    
+    # ============= COMPANY INFO OPERATIONS =============
+    
+    def insert_company_info(self, ticker: str, company_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Insert or update company information in the database.
+        Uses upsert to update if exists, insert if not.
+        
+        Args:
+            ticker: Stock ticker symbol (e.g., 'META', 'AAPL')
+            company_data: Dictionary with keys:
+            - company_name: str
+            - sector: str
+            - industry: str
+            - market_cap: int
+            - pe_ratio: float
+            - description: str
+            - website: str
+        
+        Returns:
+            Inserted/updated data or None if failed
+        
+        Example:
+            company_data = {
+            'company_name': 'Meta Platforms Inc',
+            'sector': 'Technology',
+            'industry': 'Internet Content & Information',
+            'market_cap': 1200000000000,
+            'pe_ratio': 25.5,
+            'description': 'Social media company...',
+            'website': 'https://meta.com'
+            }
+            db.insert_company_info('META', company_data)
+        """
+        try:
+            data = {
+            'ticker': ticker.upper(),
+            **company_data,
+            'last_updated': datetime.utcnow().isoformat()
+            }
+            
+            response = self.client.table('company_info').upsert(data).execute()
+            logger.info(f"Company info upserted for {ticker}")
+            return response.data[0] if response.data else None
+            
+        except Exception as e:
+            logger.error(f"Error inserting company info: {e}")
+            return None
+    
+    def get_company_info(self, ticker: str) -> Optional[Dict[str, Any]]:
+        """
+        Get company information from database.
+        
+        Args:
+            ticker: Stock ticker symbol
+        
+        Returns:
+            Company info dictionary or None if not found
+        
+        Example return:
+            {
+            'ticker': 'META',
+            'company_name': 'Meta Platforms Inc',
+            'sector': 'Technology',
+            'industry': 'Internet Content & Information',
+            'market_cap': 1200000000000,
+            'pe_ratio': 25.5,
+            'description': 'Social media company...',
+            'website': 'https://meta.com',
+            'last_updated': '2025-11-02T10:30:00',
+            'created_at': '2025-11-01T08:00:00'
+            }
+        """
+        try:
+            response = self.client.table('company_info')\
+            .select('*')\
+            .eq('ticker', ticker.upper())\
+            .execute()
+            
+            return response.data[0] if response.data else None
+            
+        except Exception as e:
+            logger.error(f"Error getting company info: {e}")
+            return None
+    
+    def is_company_info_fresh(self, ticker: str, max_age_hours: int = 24) -> bool:
+        """
+        Check if cached company info is still fresh (not stale).
+
+        Args:
+            ticker: Stock ticker symbol
+            max_age_hours: Maximum age in hours (default 24)
+
+        Returns:
+            True if data exists and is fresh, False if stale or missing
+
+        Logic:
+            - Get company_info for ticker
+            - If not found, return False (needs fetching)
+            - Compare last_updated with current time
+            - If age > max_age_hours, return False (stale)
+            - Otherwise return True (fresh)
+        """
+        try:
+            company_info = self.get_company_info(ticker)
+            
+            if not company_info:
+                return False
+            
+            last_updated = datetime.fromisoformat(company_info['last_updated'])
+            age = datetime.utcnow() - last_updated
+            max_age = timedelta(hours=max_age_hours)
+            
+            return age <= max_age
+            
+        except Exception as e:
+            logger.error(f"Error checking company info freshness: {e}")
+            return False
 
 
 # Create a singleton instance
