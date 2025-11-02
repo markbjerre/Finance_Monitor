@@ -41,7 +41,10 @@ CREATE INDEX IF NOT EXISTS idx_news_source ON news(source);
 -- ============= AI INSIGHTS TABLE =============
 CREATE TABLE IF NOT EXISTS ai_insights (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    ticker VARCHAR(10) NOT NULL,
     content TEXT NOT NULL,
+    sentiment VARCHAR(20),
+    risk_level VARCHAR(20),
     insight_type TEXT DEFAULT 'daily',
     generated_at TIMESTAMPTZ DEFAULT NOW(),
     created_at TIMESTAMPTZ DEFAULT NOW()
@@ -50,6 +53,8 @@ CREATE TABLE IF NOT EXISTS ai_insights (
 -- Index for faster queries
 CREATE INDEX IF NOT EXISTS idx_ai_insights_generated_at ON ai_insights(generated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_insights_type ON ai_insights(insight_type);
+CREATE INDEX IF NOT EXISTS idx_ai_insights_ticker ON ai_insights(ticker);
+CREATE INDEX IF NOT EXISTS idx_ai_insights_ticker_generated ON ai_insights(ticker, generated_at DESC);
 
 -- ============= ROW LEVEL SECURITY (Optional) =============
 -- Enable RLS if you want to add authentication later

@@ -419,6 +419,94 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"Error checking company info freshness: {e}")
             return False
+    
+    # ============= AI INSIGHTS OPERATIONS =============
+    
+    def insert_ai_insight(self, ticker: str, content: str, sentiment: str = None, 
+                         risk_level: str = None, insight_type: str = 'daily') -> Optional[Dict[str, Any]]:
+        """
+        Insert AI-generated insight into database.
+        
+        Args:
+            ticker: Stock ticker symbol
+            content: AI-generated analysis content
+            sentiment: Overall sentiment (bullish/bearish/neutral)
+            risk_level: Risk assessment (low/medium/high)
+            insight_type: Type of insight (default: 'daily')
+            
+        Returns:
+            Inserted data or None on error
+        """
+        try:
+            data = {
+                'ticker': ticker.upper(),
+                'content': content,
+                'sentiment': sentiment,
+                'risk_level': risk_level,
+                'insight_type': insight_type
+            }
+            
+            result = self.client.table('ai_insights').insert(data).execute()
+            logger.info(f"AI insight inserted for {ticker}")
+            return result.data[0] if result.data else None
+            
+        except Exception as e:
+            logger.error(f"Error inserting AI insight for {ticker}: {e}")
+            return None
+    
+    def get_latest_ai_insight(self, ticker: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve most recent AI insight.
+        
+        Args:
+            ticker: Optional stock ticker to filter by
+            
+        Returns:
+            Latest AI insight dict or None
+        """
+        try:
+            query = self.client.table('ai_insights').select('*').order('generated_at', desc=True)
+            
+            if ticker:
+                query = query.eq('ticker', ticker.upper())
+            
+            result = query.limit(1).execute()
+            
+            if result.data:
+                logger.info(f"Retrieved latest AI insight for {ticker if ticker else 'all'}")
+                return result.data[0]
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error fetching AI insight: {e}")
+            return None
+    
+    def get_ai_insights_history(self, ticker: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Get historical AI insights for a ticker.
+        
+        Args:
+            ticker: Stock ticker symbol
+            limit: Maximum number of insights to retrieve
+            
+        Returns:
+            List of AI insight dicts
+        """
+        try:
+            result = self.client.table('ai_insights')\
+                .select('*')\
+                .eq('ticker', ticker.upper())\
+                .order('generated_at', desc=True)\
+                .limit(limit)\
+                .execute()
+            
+            logger.info(f"Retrieved {len(result.data)} AI insights for {ticker}")
+            return result.data if result.data else []
+            
+        except Exception as e:
+            logger.error(f"Error fetching AI insights history for {ticker}: {e}")
+            return []
 
 
 # Create a singleton instance

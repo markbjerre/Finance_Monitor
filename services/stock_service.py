@@ -240,30 +240,97 @@ def fetch_multiple_stocks(tickers: List[str]) -> Dict[str, Dict[str, Any]]:
     return result
 
 
+def parse_company_info_from_yfinance(info: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Extract and format company information from yfinance Ticker.info dictionary.
+    Maps yfinance field names to our database field names.
+    
+    Args:
+        info: The .info dictionary from yfinance Ticker object
+        
+    Returns:
+        Dict with keys matching our database schema:
+            - company_name: str
+            - sector: str
+            - industry: str
+            - market_cap: int
+            - pe_ratio: float
+            - description: str
+            - website: str
+    
+    Example:
+        >>> stock = yf.Ticker('META')
+        >>> parsed = parse_company_info_from_yfinance(stock.info)
+        >>> print(parsed['company_name'])
+        'Meta Platforms Inc'
+    
+    Field Mapping (yfinance -> our database):
+        - longName -> company_name
+        - sector -> sector
+        - industry -> industry
+        - marketCap -> market_cap
+        - trailingPE -> pe_ratio
+        - longBusinessSummary -> description
+        - website -> website
+    """
+    return {
+        'company_name': info.get('longName', 'N/A'),
+        'sector': info.get('sector', 'N/A'),
+        'industry': info.get('industry', 'N/A'),
+        'market_cap': int(info.get('marketCap', 0)) if info.get('marketCap') else 0,
+        'pe_ratio': float(info.get('trailingPE', 0)) if info.get('trailingPE') else 0.0,
+        'description': info.get('longBusinessSummary', 'N/A'),
+        'website': info.get('website', 'N/A')
+    }
+    # 4. Make sure field types match database (str, int, float)
+    pass
+
+
 def get_stock_info(ticker: str) -> Dict[str, Any]:
     """
-    Get additional stock information (company name, sector, etc.).
+    Get additional stock information with intelligent caching.
+    Uses cache-first strategy to reduce API calls (24hr TTL).
     
     Args:
         ticker: Stock ticker symbol
         
     Returns:
-        Dict with company info
+        Dict with company info including ticker, name, sector, industry, 
+        market_cap, pe_ratio, description, website
     """
     try:
+        # Step 1: Check if cached data is fresh (< 24 hours old)
+        if db.is_company_info_fresh(ticker, max_age_hours=24):
+            logger.info(f"Using cached company info for {ticker}")
+            cached_data = db.get_company_info(ticker)
+            if cached_data:
+                return cached_data
+        
+        # Step 2: Fetch fresh data from yfinance API
+        logger.info(f"Fetching fresh company info for {ticker} from yfinance")
         stock = yf.Ticker(ticker)
         info = stock.info
         
+        # Step 3: Parse the data using our helper function
+        parsed_data = parse_company_info_from_yfinance(info)
+        
+        # Step 4: Save to database for future use
+        db.insert_company_info(ticker, parsed_data)
+        logger.info(f"Cached company info for {ticker}")
+        
+        # Step 5: Return the fresh data
         return {
             'ticker': ticker.upper(),
-            'name': info.get('longName', 'N/A'),
-            'sector': info.get('sector', 'N/A'),
-            'industry': info.get('industry', 'N/A'),
-            'market_cap': info.get('marketCap', 0),
-            'pe_ratio': info.get('trailingPE', 'N/A')
+            **parsed_data
         }
+        
     except Exception as e:
         logger.error(f"Error fetching info for {ticker}: {e}")
+        # Try to return stale cache as fallback
+        cached_data = db.get_company_info(ticker)
+        if cached_data:
+            logger.info(f"Returning stale cached data for {ticker} due to API error")
+            return cached_data
         return {'error': f'Failed to fetch info for {ticker}', 'ticker': ticker}
 
 

@@ -30,71 +30,138 @@ Files are hosted in a VPS hosted in hostinger under the name "ai-vearkstedet.clo
 - Error handling with try/except for API calls and database operations
 
 ## Project Structure
-TBD
+```
+Finance dashboard/
+├── app.py                  # Main Flask application
+├── config.py               # Configuration (API keys, settings)
+├── requirements.txt        # Python dependencies
+├── Dockerfile             # Container deployment
+├── .env                   # Environment variables (not in git)
+├── database/
+│   ├── schema.sql         # Supabase database schema
+│   ├── supabase_service.py # Database operations
+│   └── CLAUDE.md          # Database documentation
+├── services/
+│   ├── stock_service.py   # Stock data fetching & caching
+│   ├── news_service.py    # News fetching & caching
+│   ├── api_utils.py       # Shared API utilities
+│   └── CLAUDE.md          # Services documentation
+├── templates/
+│   └── dashboard.html     # Main dashboard UI
+├── static/
+│   └── (CSS/JS assets)
+├── tests/
+│   ├── test_*.py          # Unit tests
+│   └── README.md          # Testing guide
+└── archive/               # Deprecated/unused files
+```
 
+## Database Schema
+
+**Supabase PostgreSQL Tables:**
+
+1. **`stocks`** - Historical stock price data
+   - `ticker`, `price`, `change_percent`, `high`, `low`, `volume`
+   - `timestamp`, `created_at`
+   - Indexes: ticker, timestamp, ticker+timestamp
+
+2. **`news`** - Cached financial news articles
+   - `title`, `summary`, `url` (unique), `source`
+   - `published_at`, `fetched_at`, `created_at`
+   - Indexes: published_at, source
+   - TTL: 1 hour (refresh via cache logic)
+
+3. **`company_info`** - Cached company metadata
+   - `ticker` (PK), `company_name`, `sector`, `industry`
+   - `market_cap`, `pe_ratio`, `description`, `website`
+   - `last_updated`, `created_at`
+   - TTL: 24 hours (via `is_company_info_stale()` function)
+
+4. **`ai_insights`** - AI-generated market commentary
+   - `content`, `insight_type`, `generated_at`, `created_at`
+   - Indexes: generated_at, insight_type
+
+## Current Features
+
+✅ **Stock Dashboard**: Real-time stock prices via yfinance  
+✅ **Company Info Caching**: 24hr cache to reduce API calls  
+✅ **Financial News**: NewsAPI integration with 1hr cache  
+✅ **Interactive Charts**: Chart.js visualization  
+✅ **Health Monitoring**: `/health` endpoint for deployment  
 
 ## Important Notes
-- Keep everything simple until scope is expanded
+- All data fetching uses cache-first strategy to minimize API calls
+- yfinance: Free, no API key required
+- NewsAPI: 100 requests/day free tier
+- Supabase: PostgreSQL hosted database
+- All timestamps are timezone-aware (TIMESTAMPTZ)
 
 ## Known Issues
-
+- NewsAPI sometimes returns null title/description (handled with `or ''` fallback)
+- Duplicate news URLs expected (unique constraint prevents duplicates)
+- Chart.js lint errors in templates are false positives (Jinja2 syntax)
 
 ## Future Plans
-
-
-
-Custom Instructions
-Add specific instructions for how Claude should behave when working with your project:
+- Chart time period selector (1D-5Y)
+- NASDAQ 500 stock search/selector
+- Market indexes table (S&P 500, NASDAQ, DOW)
+- AI-generated buy/sell insights
+- WebSocket for live stock updates
 
 ## Instructions for Claude
 
 When working on this project, please:
 
-- **Challenge assumptions**: Question if the user's approach might have issues or if there's better logic available
-- **Ask for clarity**: Request elaboration when instructions are vague or where context could provide significant additional value
-- **Strive for simplicity**: Prefer simple solutions over complex ones; prevent unnecessary file proliferation
-- **Archive aggressively**: Move unused files to `archive/`, delete empty folders, consolidate test scripts
-- **Minimize documentation**: Keep docs in `README.md`, `TODO.md`, and `claude.md` only; use folder-specific `claude.md` only for complex directories
-- **Type everything**: Always include Python type hints for all function parameters and return values
-- **Optimize performance**: Prioritize performance improvements, especially for operations on 200K+ property datasets
-- **Follow existing patterns**: Use established error handling, database query patterns, and API integration approaches
-- **Document public functions**: Include comprehensive docstrings for all public functions and classes
-- **Pandas over raw Python**: Use vectorized operations for data manipulation when possible (avoid loops)
-- **SQL efficiency**: Optimize database queries; avoid N+1 problems; use proper joins and indexing
-- **Production mindset**: Treat this as production code; consider edge cases, error handling, and data integrity
+- **Be concise**: Brevity is preferred over verbosity. Keep responses short and direct.
+- **Always write unit tests**: Every feature must have comprehensive unit tests to detect and treat errors early.
+- **Challenge assumptions**: Question if the user's approach might have issues or if there's better logic available.
+- **Ask for clarity**: Request elaboration when instructions are vague or where context could provide significant additional value.
+- **Strive for simplicity**: Prefer simple solutions over complex ones; prevent unnecessary file proliferation.
+- **Archive aggressively**: Move unused files to `archive/`, delete empty folders, consolidate test scripts.
+- **Minimize documentation**: Keep docs in `CLAUDE.md` files only; use folder-specific `CLAUDE.md` only for complex directories.
+- **Type everything**: Always include Python type hints for all function parameters and return values.
+- **Follow existing patterns**: Use established error handling, database query patterns, and API integration approaches.
+- **Document public functions**: Include comprehensive docstrings for all public functions and classes.
+- **Cache-first strategy**: All external API calls should check cache before fetching.
+- **Production mindset**: Treat this as production code; consider edge cases, error handling, and data integrity.
 
 ## Environment Setup
 
-- Environment variables (examples, not actual values):
-Architecture Diagrams
-
-Mermaid diagrams to visualize architecture:
-
-## Architecture
-
-```mermaid
-# EXAMPLE
-graph TD
-    A[Client] --> B[API Gateway]
-    B --> C[Auth Service]
-    B --> D[User Service]
-    B --> E[Content Service]
-    C --> F[(Auth DB)]
-    D --> G[(User DB)]
-    E --> H[(Content DB)]
+Required `.env` variables:
+```
+NEWS_API_KEY=your_newsapi_key_here
+NEWS_API_SOURCE=newsapi
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_supabase_anon_key
 ```
 
-## Component Relationships
+## Architecture Diagrams
+
+## Application Flow
 
 ```mermaid
-# EXAMPLE
 graph TD
-    A[App] --> B[Layout]
-    B --> C[Header]
-    B --> D[Main Content]
-    B --> E[Footer]
-    D --> F[Dashboard]
-    F --> G[UserStats]
-    F --> H[ActivityFeed]
-    F --> I[Recommendations]
+    A[User] --> B[Flask App]
+    B --> C{Cache Fresh?}
+    C -->|Yes| D[Return Cached Data]
+    C -->|No| E[Fetch from API]
+    E --> F[yfinance/NewsAPI]
+    F --> G[Save to Supabase]
+    G --> D
+    D --> H[Render Dashboard]
+```
+
+## Data Architecture
+
+```mermaid
+graph LR
+    A[dashboard.html] --> B[app.py]
+    B --> C[stock_service]
+    B --> D[news_service]
+    C --> E[(Supabase)]
+    D --> E
+    C --> F[yfinance API]
+    D --> G[NewsAPI]
+    F --> E
+    G --> E
 ```

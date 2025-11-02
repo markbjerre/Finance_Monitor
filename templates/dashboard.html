@@ -113,52 +113,33 @@
                         <h5 class="mb-0"><i class="bi bi-newspaper"></i> Top Financial News</h5>
                     </div>
                     <div class="card-body">
-                        <div class="placeholder-content">
-                            <!-- Placeholder News Items -->
+                        {% if news and news|length > 0 %}
+                            <!-- Real News Articles -->
+                            {% for article in news %}
                             <div class="news-item mb-3 pb-3 border-bottom">
                                 <h6 class="text-primary">
-                                    <i class="bi bi-dot"></i> Market News Headline #1
+                                    <i class="bi bi-dot"></i> {{ article.title }}
                                 </h6>
                                 <p class="text-muted small mb-1">
-                                    News article summary will appear here. This will be pulled from financial news APIs...
+                                    {{ article.summary }}
                                 </p>
                                 <small class="text-muted">
-                                    <i class="bi bi-clock"></i> 2 hours ago | 
-                                    <i class="bi bi-link-45deg"></i> Source: News API
+                                    <i class="bi bi-clock"></i> {{ article.published_at[:10] }} | 
+                                    <i class="bi bi-building"></i> {{ article.source }} |
+                                    <a href="{{ article.url }}" target="_blank" class="text-primary">
+                                        <i class="bi bi-box-arrow-up-right"></i> Read more
+                                    </a>
                                 </small>
                             </div>
-
-                            <div class="news-item mb-3 pb-3 border-bottom">
-                                <h6 class="text-primary">
-                                    <i class="bi bi-dot"></i> Market News Headline #2
-                                </h6>
-                                <p class="text-muted small mb-1">
-                                    Another news article summary placeholder. Real news data will be integrated soon...
-                                </p>
-                                <small class="text-muted">
-                                    <i class="bi bi-clock"></i> 4 hours ago | 
-                                    <i class="bi bi-link-45deg"></i> Source: News API
-                                </small>
+                            {% endfor %}
+                        {% else %}
+                            <!-- Fallback if no news -->
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-newspaper" style="font-size: 3rem;"></i>
+                                <p class="mt-2">No news articles available at the moment.</p>
+                                <small>Check your API configuration or try again later.</small>
                             </div>
-
-                            <div class="news-item mb-3 pb-3 border-bottom">
-                                <h6 class="text-primary">
-                                    <i class="bi bi-dot"></i> Market News Headline #3
-                                </h6>
-                                <p class="text-muted small mb-1">
-                                    Third placeholder news article. These will be dynamically loaded from API...
-                                </p>
-                                <small class="text-muted">
-                                    <i class="bi bi-clock"></i> 6 hours ago | 
-                                    <i class="bi bi-link-45deg"></i> Source: News API
-                                </small>
-                            </div>
-
-                            <div class="text-center mt-4">
-                                <button class="btn btn-outline-primary" disabled>
-                                    <i class="bi bi-arrow-clockwise"></i> Load More News
-                                </button>
-                            </div>
+                        {% endif %}
                         </div>
                     </div>
                 </div>
