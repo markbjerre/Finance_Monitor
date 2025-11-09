@@ -467,6 +467,133 @@ if __name__ == '__main__':
 
 ---
 
+## AUTOMATED DEPLOYMENT: GITHUB WEBHOOKS
+
+**Status:** ✅ ACTIVE (Nov 9, 2025)
+
+### Overview
+This repository is configured with automatic deployment via GitHub webhooks. When you push to the `main` branch, the system automatically:
+1. Pulls latest code from GitHub
+2. Rebuilds the Docker container
+3. Restarts the service
+4. Verifies health checks
+
+**No manual deployment needed!**
+
+### Webhook Configuration
+- **Endpoint:** `https://ai-vaerksted.cloud/webhook`
+- **Secret:** Stored in VPS `/root/.env` as `WEBHOOK_SECRET`
+- **Events:** Push events on `main` branch only
+- **Status:** ✅ Verified working (tested Nov 9, 2025)
+
+### How It Works
+
+When you push to GitHub:
+1. GitHub sends a POST request to the webhook endpoint with HMAC-SHA256 signature
+2. Webhook service validates the signature using the shared secret
+3. Service identifies the repository name from the payload
+4. Executes the corresponding update script:
+   - **Finance_Monitor** → `/opt/webhook-scripts/update-finance.sh`
+5. Script runs asynchronously in the webhook container
+6. Container restarts automatically when rebuild completes
+
+### Update Script Details
+
+**File:** `/opt/webhook-scripts/update-finance.sh`
+
+```bash
+#!/bin/bash
+set -e
+
+REPO_DIR="/opt/ai-vaerksted/Finance_Monitor"
+CONTAINER_NAME="ai-vaerksted-finance"
+
+echo "[$(date)] Finance webhook triggered - pulling latest changes..."
+
+cd "$REPO_DIR"
+git fetch origin main
+git reset --hard origin/main
+
+echo "[$(date)] Finance code updated. Rebuilding container..."
+
+cd /root
+docker compose up -d --no-deps --build $CONTAINER_NAME
+
+echo "[$(date)] Finance deployment complete!"
+```
+
+### Testing the Webhook
+
+**Manual Test:**
+```bash
+# From any machine with network access to ai-vaerksted.cloud
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "X-Hub-Signature-256: sha256=..." \
+  -d '{"repository":{"name":"Finance_Monitor"},"ref":"refs/heads/main"}' \
+  https://ai-vaerksted.cloud/webhook
+```
+
+Response: `200 OK` with body "Deployment started"
+
+**Automatic Test:**
+Push a commit to the `main` branch. Monitor progress:
+```bash
+ssh root@72.61.179.126
+docker logs ai-vaerksted-webhook -f
+docker ps | grep finance
+```
+
+### Infrastructure Requirements
+
+For webhooks to work, the following must be in place:
+
+1. **Network/Firewall:**
+   - VPS port 443 (HTTPS) open to GitHub IP ranges
+   - GitHub can reach `https://ai-vaerksted.cloud/webhook`
+
+2. **DNS:**
+   - Domain `ai-vaerksted.cloud` must resolve correctly
+   - SSL certificate must be valid (Let's Encrypt via Traefik)
+
+3. **Docker Setup:**
+   - Docker socket mounted at `/var/run/docker.sock` (read-write)
+   - `/opt/ai-vaerksted/` mounted in webhook container (read-write for git operations)
+   - `/opt/webhook-scripts/` mounted read-only for update scripts
+
+4. **Git Configuration:**
+   - SSH key configured for GitHub cloning
+   - `git` command available in webhook container
+
+5. **Secrets:**
+   - `WEBHOOK_SECRET` environment variable set in docker-compose
+   - Must match GitHub webhook secret exactly
+
+### Troubleshooting
+
+**Webhook returns 404:**
+- Check Traefik routing: `docker logs root-traefik-1 | grep webhook`
+- Verify webhook labels in docker-compose.yml
+
+**Script fails with "git: command not found":**
+- Git not installed in webhook container
+- Rebuild webhook: `docker compose build --no-cache webhook`
+
+**Script fails with "No such file or directory":**
+- Repository not cloned to `/opt/ai-vaerksted/`
+- Check: `ls -la /opt/ai-vaerksted/Finance_Monitor/`
+
+**Container doesn't restart:**
+- Docker socket not mounted in webhook container
+- Check: `docker exec ai-vaerksted-webhook ls -l /var/run/docker.sock`
+
+### Related Documentation
+- Main Infrastructure: See `/root/docker-compose.yml`
+- Webhook Server Code: See DobbyBrain folder `webhook/` directory
+- All Update Scripts: `/opt/webhook-scripts/update-*.sh`
+
+---
+
 ## CONTACT POINTS
 
 - **VPS:** root@72.61.179.126
