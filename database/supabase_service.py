@@ -410,8 +410,15 @@ class SupabaseService:
             if not company_info:
                 return False
             
-            last_updated = datetime.fromisoformat(company_info['last_updated'])
-            age = datetime.utcnow() - last_updated
+            # Parse timestamp and make it timezone-aware if needed
+            last_updated_str = company_info['last_updated']
+            last_updated = datetime.fromisoformat(last_updated_str.replace('Z', '+00:00'))
+            
+            # Make current time timezone-aware to match
+            from datetime import timezone
+            now = datetime.now(timezone.utc)
+            
+            age = now - last_updated
             max_age = timedelta(hours=max_age_hours)
             
             return age <= max_age

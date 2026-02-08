@@ -178,7 +178,7 @@ def parse_news_article(raw_article: Dict[str, Any], source: str) -> Optional[Dic
 
 
 def get_news_with_cache(category: str = 'business', limit: int = 10, 
-                       max_age_minutes: int = 60) -> List[Dict[str, Any]]:
+                       max_age_minutes: int = 60, ticker: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     Get financial news with intelligent caching (cache-first strategy).
     Checks database first, fetches from API only if cache is stale or empty.
@@ -189,6 +189,7 @@ def get_news_with_cache(category: str = 'business', limit: int = 10,
         limit: Number of articles to return
         max_age_minutes: Maximum age of cached news in minutes. 
                         Use 0 to always fetch fresh, -1 to use cache regardless of age
+        ticker: Optional stock ticker to filter news for specific company
         
     Returns:
         List of AI-ready news articles (from cache or fresh from API)
@@ -241,6 +242,12 @@ def get_news_with_cache(category: str = 'business', limit: int = 10,
                 continue
         
         logger.info(f"Fetched and cached {len(fresh_news)} fresh news articles")
+        
+        # Step 5: Filter by ticker if provided
+        if ticker:
+            logger.info(f"Filtering news for ticker: {ticker}")
+            return fetch_stock_specific_news(ticker, limit)
+        
         return fresh_news
         
     except Exception as e:
@@ -251,19 +258,62 @@ def get_news_with_cache(category: str = 'business', limit: int = 10,
 
 def fetch_stock_specific_news(ticker: str, limit: int = 5) -> List[Dict[str, Any]]:
     """
-    Fetch news specific to a stock ticker.
+    Fetch news specific to a stock ticker using keyword search.
     
     Args:
         ticker: Stock ticker symbol (e.g., 'AAPL', 'META')
         limit: Number of articles to fetch
         
     Returns:
-        List of news articles related to the stock
+        List of news articles related to the stock, filtered by ticker keywords
     """
-    # TODO: Implement this function
-    # This is useful for showing company-specific news on the dashboard
-    # Use Alpha Vantage or Finnhub for ticker-specific news
-    pass
+    try:
+        # Fetch general business news first
+        all_news = fetch_financial_news(category='business', limit=limit * 3)  # Get 3x to filter
+        
+        # Filter for ticker-specific news using multiple keywords
+        ticker_lower = ticker.lower()
+        ticker_keywords = [ticker_lower]
+        
+        # Add company name mappings for common tickers
+        company_names = {
+            'META': ['meta', 'facebook', 'zuckerberg', 'instagram', 'threads'],
+            'AAPL': ['apple', 'iphone', 'tim cook'],
+            'MSFT': ['microsoft', 'windows', 'azure'],
+            'GOOGL': ['google', 'alphabet'],
+            'AMZN': ['amazon', 'aws', 'bezos']
+        }
+        
+        if ticker.upper() in company_names:
+            ticker_keywords.extend(company_names[ticker.upper()])
+        
+        # Filter articles that mention the ticker or company
+        filtered_news = []
+        for article in all_news:
+            title_lower = article.get('title', '').lower()
+            summary_lower = article.get('summary', '').lower()
+            combined_text = f"{title_lower} {summary_lower}"
+            
+            # Check if any ticker keyword appears in the article
+            if any(keyword in combined_text for keyword in ticker_keywords):
+                filtered_news.append(article)
+                if len(filtered_news) >= limit:
+                    break
+        
+        # If not enough ticker-specific news, add general news as fallback
+        if len(filtered_news) < limit:
+            for article in all_news:
+                if article not in filtered_news:
+                    filtered_news.append(article)
+                    if len(filtered_news) >= limit:
+                        break
+        
+        logger.info(f"Fetched {len(filtered_news)} news articles specific to {ticker}")
+        return filtered_news[:limit]
+        
+    except Exception as e:
+        logger.error(f"Error fetching stock-specific news for {ticker}: {e}")
+        return fetch_financial_news(category='business', limit=limit)  # Fallback to general news
 
 
 # ============= HELPER FUNCTIONS (API-SPECIFIC) =============

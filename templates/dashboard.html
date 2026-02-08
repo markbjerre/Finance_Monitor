@@ -27,43 +27,78 @@
 
     <!-- Main Content -->
     <div class="container-fluid mt-4">
+        <!-- Top Row - Data Summary & Chat -->
+        <div class="row mb-4">
+            <!-- Stock Data Summary -->
+            <div class="col-lg-8">
+                {% if stock and 'price' in stock %}
+                <div class="card shadow-sm border-0">
+                    <div class="card-body py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="mb-0">{{ ticker }}</h3>
+                                <small class="text-muted">{{ stock_info.name if stock_info else 'Stock' }}</small>
+                            </div>
+                            <div class="text-end">
+                                <h2 class="mb-0">${{ stock.price }}</h2>
+                                <span class="badge {% if stock.change_percent >= 0 %}bg-success{% else %}bg-danger{% endif %} fs-6">
+                                    {{ stock.change_percent }}%
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row mt-3 g-3">
+                            <div class="col-3">
+                                <small class="text-muted d-block">High</small>
+                                <strong>${{ stock.high }}</strong>
+                            </div>
+                            <div class="col-3">
+                                <small class="text-muted d-block">Low</small>
+                                <strong>${{ stock.low }}</strong>
+                            </div>
+                            <div class="col-3">
+                                <small class="text-muted d-block">Volume</small>
+                                <strong>{{ "{:,}".format(stock.volume) }}</strong>
+                            </div>
+                            <div class="col-3">
+                                <small class="text-muted d-block">P/E Ratio</small>
+                                <strong>{{ stock_info.pe_ratio if stock_info and stock_info.pe_ratio != 'N/A' else 'N/A' }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Minimalist Chat -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0" style="height: 100%;">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-robot me-2 text-primary"></i>
+                            <h6 class="mb-0 fw-bold">AI Advisor</h6>
+                        </div>
+                        <div id="chatMessages" class="mb-2" style="height: 80px; overflow-y: auto; font-size: 0.875rem;">
+                            <small class="text-muted">Ask about stocks, technicals, or compare companies...</small>
+                        </div>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="chatInput" class="form-control form-control-sm" placeholder="Ask me anything..." style="font-size: 0.875rem;" />
+                            <button class="btn btn-primary btn-sm" id="chatSend">
+                                <i class="bi bi-send-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <!-- Left Column - Stock Chart -->
             <div class="col-lg-8 mb-4">
                 <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="bi bi-graph-up"></i> {{ ticker }} - {{ stock_info.name if stock_info else 'Stock' }}</h5>
-                        <div>
-                            {% if stock and 'price' in stock %}
-                            <span class="badge bg-light text-dark fs-6">${{ stock.price }}</span>
-                            <span class="badge {% if stock.change_percent >= 0 %}bg-success{% else %}bg-danger{% endif %} fs-6">
-                                {{ stock.change_percent }}%
-                            </span>
-                            {% endif %}
-                        </div>
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="bi bi-graph-up"></i> Price Chart</h6>
                     </div>
                     <div class="card-body">
-                        <!-- Stock Info -->
-                        {% if stock and 'price' in stock %}
-                        <div class="row mb-3">
-                            <div class="col-3">
-                                <small class="text-muted">High</small><br>
-                                <strong>${{ stock.high }}</strong>
-                            </div>
-                            <div class="col-3">
-                                <small class="text-muted">Low</small><br>
-                                <strong>${{ stock.low }}</strong>
-                            </div>
-                            <div class="col-3">
-                                <small class="text-muted">Volume</small><br>
-                                <strong>{{ "{:,}".format(stock.volume) }}</strong>
-                            </div>
-                            <div class="col-3">
-                                <small class="text-muted">P/E Ratio</small><br>
-                                <strong>{{ stock_info.pe_ratio if stock_info and stock_info.pe_ratio != 'N/A' else 'N/A' }}</strong>
-                            </div>
-                        </div>
-                        {% endif %}
                         
                         <!-- Chart -->
                         <div class="chart-container" style="position: relative; height: 350px; width: 100%;">
@@ -79,33 +114,59 @@
                     <div class="card-header bg-success text-white">
                         <h5 class="mb-0"><i class="bi bi-robot"></i> AI Market Insights</h5>
                     </div>
-                    <div class="card-body" style="min-height: 400px;">
-                        <div class="placeholder-content">
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle"></i> AI Commentary Placeholder
+                    <div class="card-body" style="min-height: 400px;" id="ai-insights-container">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Loading insights...</span>
                             </div>
-                            <p class="text-muted">
-                                <strong>AI-generated market insights will appear here.</strong>
-                            </p>
-                            <p class="text-muted small">
-                                This section will provide:
-                            </p>
-                            <ul class="text-muted small">
-                                <li>Buy/sell recommendations</li>
-                                <li>Market trend analysis</li>
-                                <li>Macro economic insights</li>
-                                <li>Risk assessments</li>
-                            </ul>
-                            <p class="text-muted small mt-3">
-                                <em>Last updated: Pending integration</em>
-                            </p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Bottom Row - News Section -->
+        <!-- Technical Indicators Row -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Technical Indicators</h5>
+                    </div>
+                    <div class="card-body" id="technical-indicators-container">
+                        <div class="d-flex align-items-center justify-content-center" style="min-height: 200px;">
+                            <div class="spinner-border text-info" role="status">
+                                <span class="visually-hidden">Loading indicators...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Company Metrics Row -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> Company Metrics & Financials</h5>
+                        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#metricsCollapse" aria-expanded="true">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="collapse show" id="metricsCollapse">
+                        <div class="card-body" id="company-metrics-container">
+                            <div class="d-flex align-items-center justify-content-center" style="min-height: 150px;">
+                                <div class="spinner-border text-secondary" role="status">
+                                    <span class="visually-hidden">Loading metrics...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Row - News Section (Two Column on Desktop, Single on Mobile) -->
         <div class="row">
             <div class="col-12">
                 <div class="card shadow-sm">
@@ -114,24 +175,54 @@
                     </div>
                     <div class="card-body">
                         {% if news and news|length > 0 %}
-                            <!-- Real News Articles -->
-                            {% for article in news %}
-                            <div class="news-item mb-3 pb-3 border-bottom">
-                                <h6 class="text-primary">
-                                    <i class="bi bi-dot"></i> {{ article.title }}
-                                </h6>
-                                <p class="text-muted small mb-1">
-                                    {{ article.summary }}
-                                </p>
-                                <small class="text-muted">
-                                    <i class="bi bi-clock"></i> {{ article.published_at[:10] }} | 
-                                    <i class="bi bi-building"></i> {{ article.source }} |
-                                    <a href="{{ article.url }}" target="_blank" class="text-primary">
-                                        <i class="bi bi-box-arrow-up-right"></i> Read more
-                                    </a>
-                                </small>
+                            <!-- Two Column Layout on Desktop, Single Column on Mobile -->
+                            <div class="row">
+                                {% set half = (news|length + 1) // 2 %}
+                                <!-- First Column -->
+                                <div class="col-lg-6 col-12 mb-3 mb-lg-0">
+                                    {% for article in news[:half] %}
+                                    <div class="news-item mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="text-primary mb-0" style="flex: 1;">
+                                                <i class="bi bi-dot"></i> {{ article.title }}
+                                            </h6>
+                                            <span class="badge bg-secondary ms-2">{{ article.source }}</span>
+                                        </div>
+                                        <p class="text-muted small mb-2">
+                                            {{ article.summary }}
+                                        </p>
+                                        <small class="text-muted d-block mb-2">
+                                            <i class="bi bi-clock"></i> {{ article.published_at[:10] }}
+                                        </small>
+                                        <a href="{{ article.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-box-arrow-up-right"></i> Read
+                                        </a>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <!-- Second Column (Hidden on Mobile) -->
+                                <div class="col-lg-6 d-none d-lg-block">
+                                    {% for article in news[half:] %}
+                                    <div class="news-item mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="text-primary mb-0" style="flex: 1;">
+                                                <i class="bi bi-dot"></i> {{ article.title }}
+                                            </h6>
+                                            <span class="badge bg-secondary ms-2">{{ article.source }}</span>
+                                        </div>
+                                        <p class="text-muted small mb-2">
+                                            {{ article.summary }}
+                                        </p>
+                                        <small class="text-muted d-block mb-2">
+                                            <i class="bi bi-clock"></i> {{ article.published_at[:10] }}
+                                        </small>
+                                        <a href="{{ article.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-box-arrow-up-right"></i> Read
+                                        </a>
+                                    </div>
+                                    {% endfor %}
+                                </div>
                             </div>
-                            {% endfor %}
                         {% else %}
                             <!-- Fallback if no news -->
                             <div class="text-center text-muted py-4">
@@ -140,12 +231,13 @@
                                 <small>Check your API configuration or try again later.</small>
                             </div>
                         {% endif %}
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+
 
     <!-- Footer -->
     <footer class="bg-dark text-light text-center py-3 mt-5">
@@ -157,6 +249,9 @@
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- Chart.js Crosshair Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-crosshair@1.4.0/dist/chartjs-plugin-crosshair.min.js"></script>
     
     <!-- Stock Chart Script -->
     <script>
@@ -206,9 +301,27 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    },
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        crosshair: {
+                            line: {
+                                color: '#999',
+                                width: 1,
+                                dashPattern: [5, 5]
+                            },
+                            sync: {
+                                enabled: false
+                            },
+                            zoom: {
+                                enabled: false
+                            }
                         },
                         tooltip: {
                             mode: 'index',
@@ -218,12 +331,21 @@
                             bodyColor: '#fff',
                             padding: 12,
                             displayColors: false,
+                            borderColor: '#fff',
+                            borderWidth: 1,
                             callbacks: {
                                 title: function(context) {
                                     return context[0].label;
                                 },
                                 label: function(context) {
                                     return 'Price: $' + context.parsed.y.toFixed(2);
+                                },
+                                afterLabel: function(context) {
+                                    if (context.datasetIndex === 0) {
+                                        const prevPrice = context.dataIndex > 0 ? chartData[context.dataIndex - 1].price : context.parsed.y;
+                                        const change = ((context.parsed.y - prevPrice) / prevPrice * 100).toFixed(2);
+                                        return (change >= 0 ? '↑' : '↓') + ' ' + Math.abs(change) + '%';
+                                    }
                                 }
                             }
                         }
@@ -261,8 +383,426 @@
                 }
             });
             
+            
             {% endif %}
         });
+
+        // Fetch and display AI Market Insights
+        async function loadAIInsights() {
+            const ticker = '{{ ticker }}';
+            const container = document.getElementById('ai-insights-container');
+            
+            try {
+                const response = await fetch(`/api/ai-insights?ticker=${ticker}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const insights = await response.json();
+                renderInsights(insights, container);
+            } catch (error) {
+                console.error('Error loading AI insights:', error);
+                container.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Unable to load insights
+                        <small class="d-block text-muted mt-2">${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        // Render insights HTML
+        function renderInsights(insights, container) {
+            const sentimentBadge = getSentimentBadge(insights.sentiment);
+            const riskBadge = getRiskBadge(insights.risk_level);
+            
+            const html = `
+                <div class="insights-content">
+                    <div class="mb-3">
+                        <div class="d-flex gap-2 mb-2">
+                            ${sentimentBadge}
+                            ${riskBadge}
+                        </div>
+                        <p class="mb-2">${insights.commentary}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-2">Key Factors</h6>
+                        <ul class="small mb-0 ps-3">
+                            ${insights.key_factors.map(factor => `<li>${factor}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold">7-Day Outlook</h6>
+                        <p class="small text-muted mb-0">${insights.outlook}</p>
+                    </div>
+                    
+                    <p class="small text-muted border-top pt-2 mt-3 mb-0">
+                        <em>Source: ${insights.source}</em>
+                    </p>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        // Get sentiment badge HTML
+        function getSentimentBadge(sentiment) {
+            const badges = {
+                'bullish': '<span class="badge bg-success"><i class="bi bi-arrow-up"></i> Bullish</span>',
+                'bearish': '<span class="badge bg-danger"><i class="bi bi-arrow-down"></i> Bearish</span>',
+                'neutral': '<span class="badge bg-secondary"><i class="bi bi-dash"></i> Neutral</span>'
+            };
+            return badges[sentiment] || badges['neutral'];
+        }
+
+        // Get risk level badge HTML
+        function getRiskBadge(riskLevel) {
+            const badges = {
+                'low': '<span class="badge bg-info">Low Risk</span>',
+                'medium': '<span class="badge bg-warning">Medium Risk</span>',
+                'high': '<span class="badge bg-danger-secondary">High Risk</span>',
+                'unknown': '<span class="badge bg-secondary">Risk Unknown</span>'
+            };
+            return badges[riskLevel] || badges['unknown'];
+        }
+
+        // Fetch and display Technical Indicators
+        async function loadTechnicalIndicators() {
+            const ticker = '{{ ticker }}';
+            const container = document.getElementById('technical-indicators-container');
+            
+            try {
+                const response = await fetch(`/api/technical-indicators?ticker=${ticker}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                
+                renderTechnicalIndicators(data, container);
+            } catch (error) {
+                console.error('Error loading technical indicators:', error);
+                container.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Unable to load indicators
+                        <small class="d-block text-muted mt-2">${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        // Render Technical Indicators
+        function renderTechnicalIndicators(data, container) {
+            if (data.error) {
+                container.innerHTML = `<div class="alert alert-warning">${data.error}</div>`;
+                return;
+            }
+            
+            const indicators = data.indicators;
+            const signal = data.overall_signal;
+            const signalBadge = signal === 'Bullish' ? 'success' : signal === 'Bearish' ? 'danger' : 'secondary';
+            
+            const html = `
+                <div class="technical-summary">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0">Overall Signal</h6>
+                            <span class="badge bg-${signalBadge} fs-6">${signal}</span>
+                        </div>
+                        <small class="text-muted">${data.signal_strength}</small>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- RSI -->
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title small fw-bold text-muted">RSI (14)</h6>
+                                    <h4 class="mb-2">${indicators.rsi.value !== null ? indicators.rsi.value.toFixed(1) : 'N/A'}</h4>
+                                    <small class="text-${indicators.rsi.status.includes('Over') ? 'warning' : 'info'}">${indicators.rsi.status}</small>
+                                    <p class="small text-muted mt-2 mb-0">${indicators.rsi.description}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- MACD -->
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title small fw-bold text-muted">MACD</h6>
+                                    <h4 class="mb-1">${indicators.macd.value !== null ? indicators.macd.value.toFixed(3) : 'N/A'}</h4>
+                                    <small class="d-block text-muted">Signal: ${indicators.macd.signal !== null ? indicators.macd.signal.toFixed(3) : 'N/A'}</small>
+                                    <small class="text-${indicators.macd.status.includes('Bullish') ? 'success' : 'danger'}">${indicators.macd.status}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bollinger Bands -->
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title small fw-bold text-muted">Bollinger Bands</h6>
+                                    <div class="small">
+                                        <div>Upper: ${indicators.bollinger_bands.upper !== null ? '$' + indicators.bollinger_bands.upper.toFixed(2) : 'N/A'}</div>
+                                        <div>Middle: ${indicators.bollinger_bands.middle !== null ? '$' + indicators.bollinger_bands.middle.toFixed(2) : 'N/A'}</div>
+                                        <div>Lower: ${indicators.bollinger_bands.lower !== null ? '$' + indicators.bollinger_bands.lower.toFixed(2) : 'N/A'}</div>
+                                    </div>
+                                    <small class="text-${indicators.bollinger_bands.status.includes('Overbought') ? 'warning' : 'info'}">${indicators.bollinger_bands.status}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Moving Averages -->
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title small fw-bold text-muted">Moving Averages</h6>
+                                    <div class="small">
+                                        <div>SMA 20: ${indicators.moving_averages.sma_20 !== null ? '$' + indicators.moving_averages.sma_20.toFixed(2) : 'N/A'}</div>
+                                        <div>SMA 50: ${indicators.moving_averages.sma_50 !== null ? '$' + indicators.moving_averages.sma_50.toFixed(2) : 'N/A'}</div>
+                                    </div>
+                                    <small class="text-${indicators.moving_averages.status.includes('Uptrend') ? 'success' : 'danger'}">${indicators.moving_averages.status}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        // Fetch and display Company Metrics
+        async function loadCompanyMetrics() {
+            const ticker = '{{ ticker }}';
+            const container = document.getElementById('company-metrics-container');
+            
+            try {
+                const response = await fetch(`/api/company-metrics?ticker=${ticker}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const metrics = await response.json();
+                if (metrics.error) throw new Error(metrics.error);
+                
+                renderCompanyMetrics(metrics, container);
+            } catch (error) {
+                console.error('Error loading company metrics:', error);
+                container.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Unable to load company metrics
+                        <small class="d-block text-muted mt-2">${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        // Render Company Metrics
+        function renderCompanyMetrics(metrics, container) {
+            if (metrics.error) {
+                container.innerHTML = `<div class="alert alert-warning">${metrics.error}</div>`;
+                return;
+            }
+            
+            const html = `
+                <div class="metrics-summary">
+                    <div class="row">
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div><small class="text-muted">Market Cap</small></div>
+                            <h6 class="mb-0">${metrics.valuation.market_cap}</h6>
+                        </div>
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div><small class="text-muted">P/E Ratio</small></div>
+                            <h6 class="mb-0">${metrics.valuation.pe_ratio || 'N/A'}</h6>
+                        </div>
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div><small class="text-muted">Profit Margin</small></div>
+                            <h6 class="mb-0">${metrics.profitability.profit_margin}</h6>
+                        </div>
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div><small class="text-muted">Debt to Equity</small></div>
+                            <h6 class="mb-0">${metrics.financial_health.debt_to_equity || 'N/A'}</h6>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-2">
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div><small class="text-muted">ROE</small></div>
+                            <h6 class="mb-0">${metrics.profitability.return_on_equity}</h6>
+                        </div>
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div><small class="text-muted">Free Cashflow</small></div>
+                            <h6 class="mb-0">${metrics.financial_health.free_cashflow}</h6>
+                        </div>
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div><small class="text-muted">Dividend Yield</small></div>
+                            <h6 class="mb-0">${metrics.dividend_yield}</h6>
+                        </div>
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div><small class="text-muted">52-Week High</small></div>
+                            <h6 class="mb-0">$${metrics.fifty_two_week_high}</h6>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        // Load all data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAIInsights();
+            loadTechnicalIndicators();
+            loadCompanyMetrics();
+            initializeChat();
+        });
+
+        // ========================================
+        // CHAT FUNCTIONALITY
+        // ========================================
+        
+        let conversationHistory = [];
+        let conversationId = 'chat-' + Date.now();
+
+        function initializeChat() {
+            const sendBtn = document.getElementById('chatSend');
+            const inputField = document.getElementById('chatInput');
+            
+            sendBtn.addEventListener('click', sendChatMessage);
+            inputField.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendChatMessage();
+                }
+            });
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Clear input immediately
+            input.value = '';
+            
+            // Show user message
+            appendChatMessage('user', message);
+            
+            // Show typing indicator
+            const thinkingId = appendThinkingIndicator();
+            
+            try {
+                const response = await fetch('/api/chat-agent', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        message: message,
+                        ticker: '{{ ticker }}',
+                        conversation_id: conversationId,
+                        history: conversationHistory.slice(-10)  // Last 5 exchanges
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Remove thinking indicator
+                removeThinkingIndicator(thinkingId);
+                
+                // Show tool calls if any
+                if (data.tool_calls && data.tool_calls.length > 0) {
+                    data.tool_calls.forEach(toolCall => {
+                        appendToolCallMessage(toolCall);
+                    });
+                }
+                
+                // Show AI response
+                appendChatMessage('assistant', data.reply);
+                
+                // Update history
+                conversationHistory.push({role: 'user', content: message});
+                conversationHistory.push({role: 'assistant', content: data.reply});
+                
+            } catch (error) {
+                console.error('Chat error:', error);
+                removeThinkingIndicator(thinkingId);
+                appendChatMessage('assistant', '❌ Sorry, I encountered an error. Please try again.');
+            }
+        }
+
+        function appendChatMessage(role, content) {
+            const container = document.getElementById('chatMessages');
+            
+            // Clear placeholder text
+            if (container.textContent.includes('Ask about stocks')) {
+                container.innerHTML = '';
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'mb-1';
+            messageDiv.style.fontSize = '0.75rem';
+            
+            const icon = role === 'user' ? '👤' : '🤖';
+            const color = role === 'user' ? 'text-primary' : 'text-success';
+            
+            messageDiv.innerHTML = `
+                <div class="${color}">
+                    <strong>${icon} ${role === 'user' ? 'You' : 'AI'}:</strong> ${content.substring(0, 150)}${content.length > 150 ? '...' : ''}
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            scrollChatToBottom();
+        }
+
+        function appendThinkingIndicator() {
+            const container = document.getElementById('chatMessages');
+            const thinkingId = 'thinking-' + Date.now();
+            
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.id = thinkingId;
+            thinkingDiv.className = 'mb-1';
+            thinkingDiv.innerHTML = `
+                <small class="text-muted">
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    Thinking...
+                </small>`;
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(thinkingDiv);
+            scrollChatToBottom();
+            
+            return thinkingId;
+        }
+
+        function removeThinkingIndicator(thinkingId) {
+            const element = document.getElementById(thinkingId);
+            if (element) {
+                element.remove();
+            }
+        }
+
+        
+        function appendToolCallMessage(toolCall) {
+            // Skip tool call display in minimalist mode
+            return;
+        }
+
+        function formatToolName(toolName) {
+            return toolName
+                .replace(/_/g, ' ')
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        function scrollChatToBottom() {
+            const container = document.getElementById('chatMessages');
+            container.scrollTop = container.scrollHeight;
+        }
     </script>
 </body>
 </html>
+
