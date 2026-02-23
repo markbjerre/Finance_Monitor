@@ -1,5 +1,15 @@
 # Project: My Awesome App
 
+## Type
+Web app
+
+## Entry points
+| Action | Command |
+|--------|---------|
+| **Main entry** | `app.py` (Flask) |
+| **Run locally** | `python app.py` (requires .env with NEWS_API_KEY, SUPABASE_URL, SUPABASE_KEY) |
+| **Run tests** | `./scripts/test.sh` or `pytest tests/` |
+
 ## Project Description
 This will be a personal finance tracking and AI hobby exploration site. It is part of a bigger hobby-website project, and will be part of that eco-system. It will however be stand-alone, with option for connecting to API's, AI models and have webscrape for news. 
 
@@ -29,6 +39,9 @@ Files are hosted in a VPS hosted in hostinger under the name "ai-vearkstedet.clo
 - Comments explaining complex logic and API quirks
 - Error handling with try/except for API calls and database operations
 
+## Documentation
+See [docs/INDEX.md](docs/INDEX.md). Do not create new docs without updating INDEX.
+
 ## Project Structure
 ```
 Finance dashboard/
@@ -37,15 +50,17 @@ Finance dashboard/
 ├── requirements.txt        # Python dependencies
 ├── Dockerfile             # Container deployment
 ├── .env                   # Environment variables (not in git)
+├── docs/
+│   ├── INDEX.md           # Documentation index
+│   ├── SERVICES.md        # Services documentation
+│   └── DATABASE.md        # Database documentation
 ├── database/
 │   ├── schema.sql         # Supabase database schema
-│   ├── supabase_service.py # Database operations
-│   └── CLAUDE.md          # Database documentation
+│   └── supabase_service.py # Database operations
 ├── services/
 │   ├── stock_service.py   # Stock data fetching & caching
 │   ├── news_service.py    # News fetching & caching
-│   ├── api_utils.py       # Shared API utilities
-│   └── CLAUDE.md          # Services documentation
+│   └── api_utils.py       # Shared API utilities
 ├── templates/
 │   └── dashboard.html     # Main dashboard UI
 ├── static/
@@ -53,6 +68,7 @@ Finance dashboard/
 ├── tests/
 │   ├── test_*.py          # Unit tests
 │   └── README.md          # Testing guide
+├── tmp/                   # One-off agent scripts; clean up after session
 └── archive/               # Deprecated/unused files
 ```
 

@@ -137,8 +137,8 @@ curl http://127.0.0.1:5002/health
 ## 📚 Documentation Files
 
 - `N8N_WORKFLOW_SETUP.md` - Complete n8n workflow guide
-- `database/CLAUDE.md` - Database schema documentation
-- `services/CLAUDE.md` - Services documentation
+- `docs/DATABASE.md` - Database schema documentation
+- `docs/SERVICES.md` - Services documentation
 
 ## Ready to proceed?
 

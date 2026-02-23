@@ -355,5 +355,5 @@ After successful deployment:
 - `N8N_WORKFLOW_SETUP.md` - Detailed n8n setup
 - `N8N_QUICKSTART.md` - Quick reference
 - `DEPLOYMENT.md` - General deployment guide
-- `database/CLAUDE.md` - Database documentation
-- `services/CLAUDE.md` - Services documentation
+- `docs/DATABASE.md` - Database documentation
+- `docs/SERVICES.md` - Services documentation
