@@ -36,7 +36,7 @@ In `database/supabase_service.py`:
 ### 4. Configured n8n API Key
 Added to `.env`:
 ```
-N8N_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmMTJiNjRiOS02ZTE1LTQyNTEtYjZkZi1iNWY5ZDk4Mzc5YjMiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzYyMTE0NjYyfQ.AkRCnGoGM2LZyh579UYhMOWq95whurRtpx5GF8kU_aA
+N8N_API_KEY=  # From n8n Settings → API
 ```
 
 ## 🚀 Next Steps

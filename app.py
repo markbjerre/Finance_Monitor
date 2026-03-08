@@ -5,10 +5,13 @@ A personal finance tracking dashboard with stock prices, news, and AI insights.
 
 import logging
 import os
+from pathlib import Path
 from flask import Flask, render_template, jsonify, request
 from datetime import datetime
 
-# Load environment variables from .env file
+from load_1password_env import load_1password_env
+load_1password_env(Path(__file__).resolve().parent)
+
 from dotenv import load_dotenv
 load_dotenv()
 
